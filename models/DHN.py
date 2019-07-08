@@ -16,12 +16,13 @@ import torch.nn as nn
 
 
 class Munkrs(nn.Module):
-    def __init__(self, element_dim, hidden_dim, target_size, biDirenction, minibatch, is_cuda, is_train=True):
+    def __init__(self, element_dim, hidden_dim, target_size, biDirenction, minibatch, is_cuda, is_train=True, sigmoid=True):
         super(Munkrs, self).__init__()
         self.hidden_dim = hidden_dim
         self.bidirect = biDirenction
         self.minibatch = minibatch
         self.is_cuda = is_cuda
+        self.is_sigmoid = sigmoid
 
         # The LSTM takes word embeddings as inputs, and outputs hidden states
         # with dimensionality hidden_dim.
@@ -129,6 +130,9 @@ class Munkrs(nn.Module):
         tag_space = self.hidden2tag_1(lstm_C_out)
         tag_space = self.hidden2tag_2(tag_space)
         tag_space = self.hidden2tag_3(tag_space).view(-1, Dt.size(0))
-        tag_scores = torch.sigmoid(tag_space)
+        if self.is_sigmoid:
+            tag_scores = torch.sigmoid(tag_space)
+        else:
+            tag_scores = tag_space
         # tag_scores is of shape [batch, h, w] as Dt
         return tag_scores.view(Dt.size(1), Dt.size(2), -1).permute(2, 0, 1).contiguous()
